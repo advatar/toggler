@@ -70,56 +70,44 @@ div.public {color:black}</style>
     }
 };
 
- function set_flag(jsonObj,index,val) {
-    console.log(index);
-    if( typeof jsonObj == "object" ) {
-        $.each(jsonObj, function(k,v) {
+ // filter out all the private fields
+ function strip_flags(jsonIn) {
+ 	json = {};
+
+    if( typeof jsonIn == "object" ) {
+        $.each(jsonIn, function(k,v) {            
             // k is either an array index or object key
             if (k=="publish")
             {
-              console.log(k+":"+v);
-              console.log(jsonObj);
-              jsonObj[k]=val;
-            }
-            else
-            	set_flag(v,index,val);
-        });
-    }
- }
-
- // filter out all the private fields
- function strip_flags(jsonIn,jsonOut) {
-    if( typeof jsonIn == "object" ) {
-        $.each(jsonIn, function(k,v) {
-            
-            // k is either an array index or object key
-
-            if (k=="publish" && v==true)
-            {
-              console.log(k+":"+v);
-              console.log(jsonIn);
+              //console.log(k+":"+v);
+              //console.log(jsonIn);
               //jsonOut.push(k+":"+v);
             }
             else
-            	strip_flags(v,jsonOut);
+            	strip_flags(v);
         });
     }
+    return json;
   }
 
 var source   = $("#education").html();
 var template = Handlebars.compile(source);
 var $results = $('#profile');
 var profile ={};
-
+var map = json.educations.values; // this is an arracy
+ 
  for(i=0; i<json.educations._total;i++)
  {
    context = {"education":json.educations.values[i],"ref":+i};
+   //console.log(map[i]);
    degree=template(context);
    $results.append(degree);
  } 
 
       $("#profile-json").html("<br><b>Private Profile:</b><br>"+JSON.stringify(json));
-      strip_flags(json,profile);
+      /*
+      profile = strip_flags(json);*/
+      profile=json;
       $("#profile-json").append("<br><b>Public Profile:</b><br>"+JSON.stringify(profile));
 
 
@@ -128,23 +116,26 @@ var profile ={};
     $(this).click(function(elem) {
       el = $(this);
       //console.log(el.context.id);
-      flag =el.context.id;
+      id =el.context.id;
 
+      //console.log(id);
       if (el.hasClass("public"))
       {
       	el.removeClass("public");
-        set_flag(json,flag,false);
+      	map[id].publish=false;
        }
       else
       {
      	el.addClass("public");
-        set_flag(json,flag,true);
-      }
+       	map[id].publish=true;
+     }
 
       $("#profile-json").html("<br><b>Private Profile:</b><br>"+JSON.stringify(json));
-      strip_flags(json,profile);
+      /*
+      profile = strip_flags(json);*/
+      profile=json;
       $("#profile-json").append("<br><b>Public Profile:</b><br>"+JSON.stringify(profile));
- 
+      
     }); 
 
   });
@@ -172,5 +163,7 @@ id={{ref}}>
 <div>School:{{education.schoolName}}</div>
 {{/if}}
 
-</span>
 </div>
+</div>
+</script>
+
