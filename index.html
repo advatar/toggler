@@ -1,0 +1,171 @@
+<html>
+<head>
+<style> 
+div.toggler {color:lightgray;margin:5px;border-style:solid;border-width:medium;}
+div.public {color:black}</style>
+</head>
+
+<body>
+  <div id="profile" style="padding:5px;"></div>
+  <div id="profile-json" style="padding:5px;"></div>
+</body>
+</htlm>
+<script src=jquery-1.8.3.min.js></script>
+<script src=handlebars.js></script>
+<script type="text/javascript">
+ window.onload=function() { 
+ 
+  json = {
+    "educations": {
+        "_total": 3,
+            "values": [
+            {
+              "activities": "",
+               "degree": "Bachelor of Information Technology",
+               "endDate": {
+                 "year": 2005
+               },
+               "fieldOfStudy": "Information Technology",
+               "id": 13070824,
+               "notes": "",
+               "schoolName": "Indira Gandhi National Open University",
+               "startDate": {
+               "year": 2001
+               },
+               "publish": true
+             }, 
+           {
+              "activities": "",
+               "degree": "Bachelor of Information Technology",
+               "endDate": {
+                 "year": 2005
+               },
+               "fieldOfStudy": "Information Technology",
+               "id": 13070824,
+               "notes": "",
+               "schoolName": "Indira Gandhi National Open University",
+               "startDate": {
+               "year": 2001
+               },
+               "publish": true
+             }, 
+             {
+               "endDate": {
+                 "year": 1997
+               },
+               "id": 77668801,
+               "notes": "",
+               "schoolName": "Zila School, Bhagalpur, Bihar",
+               "startDate": {
+               "year": 1992
+             },
+               "publish": false
+           }
+        ]
+    }
+};
+
+ function set_flag(jsonObj,index,val) {
+    console.log(index);
+    if( typeof jsonObj == "object" ) {
+        $.each(jsonObj, function(k,v) {
+            // k is either an array index or object key
+            if (k=="publish")
+            {
+              console.log(k+":"+v);
+              console.log(jsonObj);
+              jsonObj[k]=val;
+            }
+            else
+            	set_flag(v,index,val);
+        });
+    }
+ }
+
+ // filter out all the private fields
+ function strip_flags(jsonIn,jsonOut) {
+    if( typeof jsonIn == "object" ) {
+        $.each(jsonIn, function(k,v) {
+            
+            // k is either an array index or object key
+
+            if (k=="publish" && v==true)
+            {
+              console.log(k+":"+v);
+              console.log(jsonIn);
+              //jsonOut.push(k+":"+v);
+            }
+            else
+            	strip_flags(v,jsonOut);
+        });
+    }
+  }
+
+var source   = $("#education").html();
+var template = Handlebars.compile(source);
+var $results = $('#profile');
+var profile ={};
+
+ for(i=0; i<json.educations._total;i++)
+ {
+   context = {"education":json.educations.values[i],"ref":+i};
+   degree=template(context);
+   $results.append(degree);
+ } 
+
+      $("#profile-json").html("<br><b>Private Profile:</b><br>"+JSON.stringify(json));
+      strip_flags(json,profile);
+      $("#profile-json").append("<br><b>Public Profile:</b><br>"+JSON.stringify(profile));
+
+
+ // now hook up the toggle event handler and set to reflect current publish status
+  $('.toggler').each(function(index) {
+    $(this).click(function(elem) {
+      el = $(this);
+      //console.log(el.context.id);
+      flag =el.context.id;
+
+      if (el.hasClass("public"))
+      {
+      	el.removeClass("public");
+        set_flag(json,flag,false);
+       }
+      else
+      {
+     	el.addClass("public");
+        set_flag(json,flag,true);
+      }
+
+      $("#profile-json").html("<br><b>Private Profile:</b><br>"+JSON.stringify(json));
+      strip_flags(json,profile);
+      $("#profile-json").append("<br><b>Public Profile:</b><br>"+JSON.stringify(profile));
+ 
+    }); 
+
+  });
+};
+
+
+</script>
+
+<script id="education" type="text/x-handlebars-template">
+
+
+{{#if education.publish}}
+<div class="toggler public"
+{{else}} 
+<div class="toggler"
+{{/if}} 
+
+id={{ref}}>
+
+
+{{#if education.degree}}
+<div>Degree:{{education.degree}}</div>
+{{/if}}
+{{#if education.schoolName}}
+<div>School:{{education.schoolName}}</div>
+{{/if}}
+
+</span>
+</div>
